@@ -40,7 +40,7 @@ $$
 $$
 \begin{align*}
 Y_{i,d,h} &\sim \text{Poisson}(\lambda_{i,d,h}) \\
-\lambda_{i,d,h} &= \exp\left\{\log(\beta_i\pi_{i,h}) + (-1)^{D_i} \times 0.02 \times T_d\right\}
+\lambda_{i,d,h} &= \exp \left( \log(\beta_i\pi_{i,h}) + (-1)^{D_i} \times 0.02 \times T_d \right)
 \end{align*}
 $$
 
@@ -49,6 +49,6 @@ $$
 $$
 \begin{align*}
 Y_{i,j,d,h} &\sim \text{Poisson}(\lambda_{i,j,d,h}) \\
-\lambda_{i,j,d,h} &= \gamma_j\exp\left\{\log(\beta_i\pi_{i,h}) + (-1)^{D_i} \times 0.02 \times T_d\right\}
+\lambda_{i,j,d,h} &= \gamma_j\exp \left(\log(\beta_i\pi_{i,h}) + (-1)^{D_i} \times 0.02 \times T_d \right)
 \end{align*}
 $$
