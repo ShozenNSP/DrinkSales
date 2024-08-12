@@ -27,6 +27,7 @@ python generate_dataset.py
 ## 生成設定
 ### 時系列
 各ドリンクの1時間あたりの売上レートは `pidXYZ.xlsx` ファイルの `prop` 変数で決定される. 1日に販売される飲料の予想数は `drink_specs.xlsx` ファイルの `popularity` 変数で決定される. ここで, $\beta_i$ を飲み物 $i$ の人気度, $\pi_{i,h}$を時間$h$に売れた飲み物 $i$ の割合とする. すると, 1時間あたりのドリンク販売数の基本式は以下のようになる:
+
 $$
 \begin{align*}
 Y_{i,h} &\sim \text{Poisson}(\lambda_{i,h}) \\
@@ -46,6 +47,7 @@ $$
 
 ### 地域効果
 各飲料の売上は自動販売機の設置場所にも影響されます。立地との関係は `vm_specs.xlsx` ファイル中の `loc_coef` 変数によって決定される。自販機 $j$ の `loc_coef` の値を $\gamma_j$ とする。すると、1日あたりの飲料販売数の計算式は以下のようになる:
+
 $$
 \begin{align*}
 Y_{i,j,d,h} &\sim \text{Poisson}(\lambda_{i,j,d,h}) \\
