@@ -4,47 +4,48 @@ import numpy as np
 import pandas as pd
 
 class VendingMachine:
-  def __init__(self, id, drinks, location):
+  def __init__(self, id, inventory, location):
     self.id = id
-    self.drinks = drinks
     self.location = location
+    self.inventory = inventory # 在庫
 
-  def simulate_sales(self, datetime, temp):
-    # 初期化
-    self.datetime = datetime
-    self.count = dict()
-    self.sales = dict()
+    self.sales = {}
+    for drink in inventory:
+      self.sales[drink] = {'time': [], 'count': [], 'sales': []}
 
-    # 飲料ごとに売上をシミュレーション
-    hour = datetime.dt.hour
-    for drink in self.drinks:
-      rate = drink.rate[hour] * drink.popularity
+    self.replenish()
+    
+  def replenish(self):
+    """在庫の補充"""
+    for drink in self.inventory:
+      self.inventory[drink]['stock'] = self.inventory[drink]['max']
 
-      # 温度による影響
-      if drink.warm:
-        rate = np.exp(np.log(rate) + 0.02*temp)
+  def sale(self, time, drink, n):
+    stock = self.inventory[drink]['stock']
+    if stock > 0: # 在庫があれば
+      if stock > n:
+        self.inventory[drink]['stock'] = stock - n
+        self.sales[drink]['count'].append(n)
       else:
-        rate = np.exp(np.log(rate) - 0.02*temp)
+        self.inventory[drink]['stock'] = 0
+        self.sales[drink]['count'].append(stock)
 
-      # 場所による影響
-      rate = rate * self.location
-
-      # シミュレーション
-      self.count[drink.id] = np.random.poisson(rate)
-      self.sales[drink.id] = self.count[drink.id] * drink.price
+    else: # 在庫がなければ
+      self.sales[drink]['count'].append(0)
+    
+    self.sales[drink]['time'].append(time)
   
   def get_sales(self):
     if self.sales is None:
       raise Exception('Please run simulate_sales() first.')
     
     dfs = list()
-    for drink in self.drinks:
+    for drink in self.inventory:
       df = pd.DataFrame({
         'machine_id': self.id,
-        'product_id': drink.id,
-        'datetime': self.datetime,
-        'count': self.count[drink.id],
-        'sales': self.sales[drink.id]
+        'product_id': drink,
+        'datetime': self.sales[drink]['time'],
+        'count': self.sales[drink]['count']
       })
       dfs.append(df)
       
@@ -60,6 +61,27 @@ class Drink:
     path = 'data/' + id + '.xlsx'
     df = pd.read_excel(path)
     self.rate = df['prop'].values
+
+def simulate_sales(vms, drinks, datetime, temp):
+  for i in range(len(datetime)):
+    for vm in vms:
+      for drink in drinks:
+        dow = datetime[i].dayofweek
+        hour = datetime[i].hour
+
+        # 毎週月曜日の0時に在庫を補充
+        if dow == 0 and hour == 0:
+          vm.replenish() 
+      
+        rate = drink.rate[hour] * drink.popularity
+        if drink.warm:
+          rate = np.exp(np.log(rate) + 0.02*temp[i])
+        else:
+          rate = np.exp(np.log(rate) - 0.02*temp[i])
+
+        rate = rate * vm.location
+        n = np.random.poisson(rate)
+        vm.sale(datetime[i], drink.id, n)
 
 if __name__ == '__main__':
   root_dir = os.getcwd()
@@ -89,12 +111,18 @@ if __name__ == '__main__':
   drinks = [Drink(r.product_id, r.price, r.warm, r.popularity) for r in df_drinks.itertuples()]
 
   # 自動販売機オブジェクトの初期化
-  vms = [VendingMachine(r.machine_id, drinks, r.loc_coef) for r in df_vm.itertuples()]
+  inventory = {
+    'pid001': {'max': 100, 'stock': 100},
+    'pid002': {'max': 100, 'stock': 100},
+    'pid003': {'max': 100, 'stock': 100},
+  }
+
+  vms = [VendingMachine(r.machine_id, inventory, r.loc_coef) for r in df_vm.itertuples()]
 
   x = df_temp['datetime']
   z = df_temp['temperature_daily']
 
+  simulate_sales(vms, drinks, x, z)
   for vm in vms:
-    vm.simulate_sales(x, z)
     df_sales = vm.get_sales()
     df_sales.to_csv(root_dir + '/outputs/' + vm.id + '.csv', index=False) # 保存
