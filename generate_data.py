@@ -75,9 +75,9 @@ def simulate_sales(vms, drinks, datetime, temp):
       
         rate = drink.rate[hour] * drink.popularity
         if drink.warm:
-          rate = np.exp(np.log(rate) + 0.02*temp[i])
+          rate = np.exp(np.log(rate) + 0.2*temp[i])
         else:
-          rate = np.exp(np.log(rate) - 0.02*temp[i])
+          rate = np.exp(np.log(rate) - 0.1*temp[i])
 
         rate = rate * vm.location
         n = np.random.poisson(rate)
